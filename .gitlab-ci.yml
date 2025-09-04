@@ -1,22 +1,48 @@
 stages:
-  - install
+  - setup
+  - install_or_upgrade
   - configure
 
 variables:
-  AAP_TARBALL: "ansible-automation-platform-setup-bundle-2.5-1.tar.gz"
-  AAP_DIR: "/opt/aap"
+  AAP_DIR: "/opt/aap/ansible-automation-platform-setup-bundle-2.5-1"
+  INVENTORY_FILE: "inventory"  # path relative to AAP_DIR
 
-install_aap:
-  stage: install
-  tags:
-    - shell  # or your GitLab runner tag
+# Stage 1: Detect if AAP is installed
+setup_env:
+  stage: setup
   script:
-    - ansible-playbook playbooks/install_aap.yml -i playbooks/hosts
+    - |
+      if systemctl is-active --quiet automation-controller; then
+        echo "AAP_INSTALLED=true" >> install.env
+      else
+        echo "AAP_INSTALLED=false" >> install.env
+      fi
+  artifacts:
+    reports:
+      dotenv: install.env
 
+# Stage 2: Install or upgrade AAP
+install_or_upgrade_aap:
+  stage: install_or_upgrade
+  tags:
+    - shell
+  script:
+    - |
+      if [ "$AAP_INSTALLED" = "true" ]; then
+        echo "Running AAP upgrade..."
+        sudo {{ AAP_DIR }}/setup.sh -i {{ AAP_DIR }}/{{ INVENTORY_FILE }} --upgrade
+      else
+        echo "Running AAP fresh install..."
+        sudo {{ AAP_DIR }}/setup.sh -i {{ AAP_DIR }}/{{ INVENTORY_FILE }}
+      fi
+  dependencies:
+    - setup_env
+
+# Stage 3: Configure AAP via CaC
 configure_aap:
   stage: configure
   tags:
     - shell
-  needs: [install_aap]
+  needs: [install_or_upgrade_aap]
   script:
     - ansible-playbook playbooks/configure_aap.yml -i localhost,
