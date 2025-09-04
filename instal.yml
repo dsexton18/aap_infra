@@ -1,0 +1,25 @@
+---
+- name: Install AAP 2.5
+  hosts: aap_nodes
+  become: true
+  vars:
+    aap_installer_tarball: /opt/aap/ansible-automation-platform-setup-bundle-2.5-1.tar.gz
+    aap_inventory_template: /opt/aap/inventory.ini.j2
+
+  tasks:
+    - name: Extract AAP installer
+      unarchive:
+        src: "{{ aap_installer_tarball }}"
+        dest: /opt/aap/
+        remote_src: true
+
+    - name: Render AAP installer inventory
+      template:
+        src: "{{ aap_inventory_template }}"
+        dest: /opt/aap/ansible-automation-platform-setup-bundle-2.5-1/inventory"
+
+    - name: Run AAP installer
+      command: >
+        ansible-playbook -i inventory install.yml
+      args:
+        chdir: /opt/aap/ansible-automation-platform-setup-bundle-2.5-1
