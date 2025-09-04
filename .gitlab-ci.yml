@@ -1,0 +1,22 @@
+stages:
+  - install
+  - configure
+
+variables:
+  AAP_TARBALL: "ansible-automation-platform-setup-bundle-2.5-1.tar.gz"
+  AAP_DIR: "/opt/aap"
+
+install_aap:
+  stage: install
+  tags:
+    - shell  # or your GitLab runner tag
+  script:
+    - ansible-playbook playbooks/install_aap.yml -i playbooks/hosts
+
+configure_aap:
+  stage: configure
+  tags:
+    - shell
+  needs: [install_aap]
+  script:
+    - ansible-playbook playbooks/configure_aap.yml -i localhost,
