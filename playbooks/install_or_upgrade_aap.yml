@@ -1,0 +1,31 @@
+---
+- name: Install or Upgrade AAP 2.5
+  hosts: aap_nodes
+  become: true
+  vars:
+    aap_installer_tarball: "{{ lookup('env', 'AAP_TARBALL') }}"
+    aap_installer_dir: "{{ lookup('env', 'AAP_DIR') }}"
+    aap_bundle: "{{ lookup('env', 'AAP_BUNDLE') }}"
+    aap_installed: "{{ lookup('env', 'AAP_INSTALLED') | default('false') }}"
+
+  tasks:
+    - name: Extract AAP installer
+      unarchive:
+        src: "{{ aap_installer_tarball }}"
+        dest: "{{ aap_installer_dir }}"
+        remote_src: true
+        extra_opts: [--overwrite]
+
+    - name: Render inventory file
+      template:
+        src: templates/inventory.ini.j2
+        dest: "{{ aap_installer_dir }}/{{ aap_bundle }}/inventory"
+
+    - name: Decide install vs upgrade playbook
+      set_fact:
+        aap_playbook: "{{ 'upgrade.yml' if aap_installed == 'true' else 'install.yml' }}"
+
+    - name: Run AAP installer/upgrade
+      command: ansible-playbook -i inventory {{ aap_playbook }}
+      args:
+        chdir: "{{ aap_installer_dir }}/{{ aap_bundle }}"
