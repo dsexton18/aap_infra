@@ -1,0 +1,21 @@
+---
+- name: Configure AAP (CaC)
+  hosts: localhost
+  connection: local
+  vars:
+    controller_hostname: "https://aap-controller.example.com"
+    controller_username: "admin"
+    controller_password: "{{ vault_aap_admin_password }}"
+    validate_certs: false
+
+    aap_configuration_templates:
+      - name: "Deploy App"
+        project: "App Project"
+        inventory: "Production"
+        playbook: "deploy.yml"
+        credentials:
+          - "Prod SSH Key"
+        state: present
+
+  roles:
+    - infra.aap_configuration.aap_configuration_template
