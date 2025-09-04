@@ -1,0 +1,19 @@
+stages:
+  - setup
+  - install_or_upgrade
+  - configure
+
+install_or_upgrade_aap:
+  stage: install_or_upgrade
+  tags:
+    - shell
+  script:
+    - ansible-playbook playbooks/install_or_upgrade_aap.yml -i playbooks/hosts
+
+configure_aap:
+  stage: configure
+  tags:
+    - shell
+  needs: [install_or_upgrade_aap]
+  script:
+    - ansible-playbook playbooks/configure_aap.yml -i localhost,
