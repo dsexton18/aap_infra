@@ -1,0 +1,29 @@
+---
+- name: Install or Upgrade AAP 2.5
+  hosts: aap_nodes
+  become: true
+  vars:
+    aap_dir: "/opt/aap/ansible-automation-platform-setup-bundle-2.5-1"
+    inventory_file: "inventory"    # relative to aap_dir
+
+  tasks:
+    - name: Check if Automation Controller service is running
+      command: systemctl is-active automation-controller
+      register: controller_status
+      ignore_errors: true
+
+    - name: Determine install vs upgrade
+      set_fact:
+        aap_upgrade: "{{ controller_status.rc == 0 }}"
+
+    - name: Run AAP installer (fresh install)
+      command: ./setup.sh -i "{{ aap_dir }}/{{ inventory_file }}"
+      args:
+        chdir: "{{ aap_dir }}"
+      when: not aap_upgrade
+
+    - name: Run AAP upgrade
+      command: ./setup.sh -i "{{ aap_dir }}/{{ inventory_file }}" --upgrade
+      args:
+        chdir: "{{ aap_dir }}"
+      when: aap_upgrade
