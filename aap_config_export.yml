@@ -1,0 +1,33 @@
+---
+- name: Export AAP configuration into file tree
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - infra.aap_configuration_extended
+
+  vars:
+    # Directory where the exported configuration will be stored
+    filetree_create_path: "./aap_config_export"
+
+    # Optional: filter what to export (leave empty for all)
+    filetree_create_export:
+      organizations: true
+      users: true
+      teams: true
+      credentials: true
+      projects: true
+      inventories: true
+      job_templates: true
+      workflow_job_templates: true
+      execution_environments: true
+      notification_templates: true
+      settings: true
+
+    # AAP/Tower connection details
+    controller_host: "https://aap.example.com"
+    controller_username: "admin"
+    controller_password: "{{ vault_aap_password }}"
+    controller_validate_certs: false
+
+  roles:
+    - role: filetree_create
