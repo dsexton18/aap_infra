@@ -1,0 +1,20 @@
+---
+- name: Export all job templates from AAP
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - infra.aap_configuration_extended
+
+  vars:
+    controller_host: "https://aap.example.com"   # Your AAP/Tower URL
+    controller_username: "admin"                 # Your username
+    controller_password: "your_password"         # Your password
+    controller_validate_certs: false             # Set true if using valid SSL certs
+    filetree_create_output_dir: "./aap_export"   # Where to store exported files
+    filetree_create_object_types:
+      - job_templates                            # Only export job templates
+
+  tasks:
+    - name: Export job templates
+      include_role:
+        name: filetree_create
