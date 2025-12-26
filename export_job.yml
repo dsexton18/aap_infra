@@ -1,0 +1,27 @@
+---
+- name: Export all job templates from AAP 2.6
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - infra.controller_configuration
+
+  vars:
+    controller_host: "https://aap.example.com"
+    controller_username: "admin"
+    controller_password: "{{ vault_controller_password }}"
+    controller_validate_certs: false
+
+    # Export configuration
+    export_dir: "./aap_exports"
+
+    export_resources:
+      job_templates: "all"  # This tells the role to export ALL job templates
+
+  tasks:
+    - name: Export all job templates
+      include_role:
+        name: controller_configuration.filetree_create
+      vars:
+        controller_config_file: ""
+        export_path: "{{ export_dir }}"
+        export_resources: "{{ export_resources }}"
